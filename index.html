@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>UAV Defense | OSINT Command Center</title>
+
+<link rel="stylesheet"
+href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+
+<style>
+*{box-sizing:border-box}
+body{
+ margin:0;background:#080d15;color:#dce7f5;
+ font-family:Arial,sans-serif;font-size:13px
+}
+header{
+ height:58px;background:#111b29;border-bottom:1px solid #26384c;
+ display:flex;align-items:center;justify-content:space-between;
+ padding:0 16px
+}
+.brand{font-weight:bold;letter-spacing:1px;color:#55d6ff}
+.live{color:#5ee6a8}
+.layout{
+ display:grid;grid-template-columns:220px minmax(0,1fr) 270px;
+ gap:10px;padding:10px;height:calc(100vh - 95px)
+}
+.panel{
+ background:#101a28;border:1px solid #26384c;
+ border-radius:6px;overflow:hidden;min-width:0
+}
+.heading{
+ padding:12px;border-bottom:1px solid #26384c;
+ color:#8ba9c7;font-weight:bold;letter-spacing:1px
+}
+.content{padding:12px}
+.item{
+ padding:11px 8px;border-bottom:1px solid #202e40;
+ color:#b8c8da
+}
+.item span{float:right;color:#55d6ff}
+.metric{
+ background:#142337;border:1px solid #2b4059;
+ padding:12px;margin-bottom:9px;border-radius:5px
+}
+.metric strong{display:block;font-size:22px;margin-top:7px}
+.blue{color:#56cfff}
+.green{color:#62e6a5}
+.orange{color:#ffbd63}
+.red{color:#ff737b}
+#map{height:100%;min-height:400px;background:#101a28}
+.center{display:grid;grid-template-rows:1fr 170px;gap:10px;min-height:0}
+.mapbox{position:relative;min-height:0}
+.maplabel{
+ position:absolute;z-index:500;top:12px;left:12px;
+ background:#101a28eF;border:1px solid #3a526c;
+ padding:9px;border-radius:4px
+}
+.bottom{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.log{font-size:12px;line-height:1.8;color:#a9bdd1}
+footer{
+ height:37px;background:#111b29;border-top:1px solid #26384c;
+ padding:11px 15px;color:#7890aa;font-size:11px
+}
+button{
+ background:#18334a;color:#9de4ff;border:1px solid #31516c;
+ border-radius:4px;padding:8px;cursor:pointer
+}
+@media(max-width:850px){
+ .layout{grid-template-columns:155px minmax(0,1fr);height:auto}
+ .right{grid-column:1/-1}
+ .center{min-height:650px}
+ #map{min-height:430px}
+}
+@media(max-width:520px){
+ header{padding:0 9px;font-size:11px}
+ .layout{grid-template-columns:1fr;padding:6px}
+ .left{display:grid;grid-template-columns:1fr 1fr}
+ .left .heading{grid-column:1/-1}
+ .center{grid-template-rows:430px auto;min-height:0}
+ .bottom{grid-template-columns:1fr}
+ .right{grid-column:auto}
+}
+</style>
+</head>
+
+<body>
+<header>
+ <div class="brand">◈ UAV DEFENSE / INTELLIGENCE</div>
+ <div class="live">● SYSTEM ONLINE</div>
+ <div id="clock">--:--:--</div>
+</header>
+
+<main class="layout">
+
+<section class="panel left">
+ <div class="heading">INTELLIGENCE LAYERS</div>
+ <div class="content">
+  <div class="item">UAV Overview <span>ON</span></div>
+  <div class="item">Geospatial Map <span>ON</span></div>
+  <div class="item">OSINT Sources <span>ON</span></div>
+  <div class="item">Airspace Context <span>ON</span></div>
+  <div class="item">Threat Alerts <span>ON</span></div>
+  <div class="item">Maritime Context <span>OFF</span></div>
+  <div class="item">Military Tracking <span>OFF</span></div>
+ </div>
+ <div class="heading">SYSTEM STATUS</div>
+ <div class="content">
+  <div class="metric">Dashboard<strong class="green">ACTIVE</strong></div>
+  <div class="metric">Live UAV Sensor<strong class="orange">NOT CONNECTED</strong></div>
+  <div class="metric">External Feeds<strong class="orange">PENDING</strong></div>
+ </div>
+</section>
+
+<section class="center">
+ <div class="panel mapbox">
+  <div class="maplabel">
+   GLOBAL GEOINT MAP<br>
+   <span class="green">● Map tiles</span>
+   <span class="orange"> | Demo markers</span>
+  </div>
+  <div id="map"></div>
+ </div>
+
+ <div class="bottom">
+  <div class="panel">
+   <div class="heading">MISSION OVERVIEW</div>
+   <div class="content">
+    <div class="metric">Tracked UAV<strong class="blue">0</strong></div>
+    <div class="metric">Verified Alerts<strong class="green">0</strong></div>
+   </div>
+  </div>
+  <div class="panel">
+   <div class="heading">EVENT TIMELINE</div>
+   <div class="content log" id="timeline">
+    [SYSTEM] Dashboard initialized<br>
+    [MAP] Waiting for map service<br>
+    [DATA] No live sensor connected
+   </div>
+  </div>
+ </div>
+</section>
+
+<section class="panel right">
+ <div class="heading">OSINT INTELLIGENCE FEED</div>
+ <div class="content">
+  <div class="metric">Public-source monitoring<strong class="blue">STANDBY</strong></div>
+  <div class="item">News intelligence <span>Pending</span></div>
+  <div class="item">Public reports <span>Pending</span></div>
+  <div class="item">Airspace data <span>Pending</span></div>
+  <div class="item">Network inventory <span>Not connected</span></div>
+ </div>
+
+ <div class="heading">AI ANALYST</div>
+ <div class="content">
+  <div class="metric">
+   <strong class="blue">LOCAL ANALYSIS</strong>
+   <p>Analyst interface is available. No AI model is connected yet.</p>
+   <button onclick="alert('AI connector belum dikonfigurasi.')">
+    Open Analyst
+   </button>
+  </div>
+ </div>
+
+ <div class="heading">ALERT CENTER</div>
+ <div class="content log">
+  <span class="green">●</span> No verified threat alerts<br>
+  <span class="orange">●</span> External data integration pending
+ </div>
+</section>
+
+</main>
+
+<footer>
+ UAV DEFENSE OSINT • PUBLIC DATA CONTEXT • SENSOR NOT CONNECTED • BUILD 0.1
+</footer>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const map=L.map('map').setView([-2,118],4);
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+ maxZoom:18,
+ attribution:'© OpenStreetMap contributors'
+}).addTo(map);
+
+L.control.scale().addTo(map);
+
+L.marker([-6.2,106.8]).addTo(map)
+.bindPopup('Jakarta — lokasi referensi peta');
+
+L.marker([-7.25,112.75]).addTo(map)
+.bindPopup('Surabaya — lokasi referensi peta');
+
+function updateClock(){
+ document.getElementById('clock').textContent=
+ new Date().toLocaleTimeString('id-ID');
+}
+updateClock();
+setInterval(updateClock,1000);
+</script>
+</body>
+</html>
