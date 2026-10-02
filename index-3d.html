@@ -1,0 +1,420 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>UAV DEFENSE / OSINT COMMAND</title>
+
+<link rel="stylesheet"
+ href="https://cesium.com/downloads/cesiumjs/releases/1.136/Build/Cesium/Widgets/widgets.css">
+
+<style>
+:root{
+  --bg:#050a0f; --panel:#09131c; --panel2:#0d1a25;
+  --line:#18354a; --text:#c7d8e8; --muted:#7f9bb0;
+  --cyan:#44d7ff; --green:#38e6a0; --red:#ff647c;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);
+font-family:Arial,Helvetica,sans-serif}
+body{min-height:100vh}
+.top{
+  height:82px;display:flex;align-items:center;gap:16px;padding:14px 20px;
+  border-bottom:1px solid var(--line);background:#060d14;
+}
+.menu{
+  width:60px;height:60px;border:1px solid #21445c;border-radius:12px;
+  background:#0c2030;color:#b9eaff;font-size:28px
+}
+.brand{font-size:20px;font-weight:700;color:var(--cyan);letter-spacing:.5px}
+.clock{margin-left:auto;color:#9eb3c4;font-size:18px}
+.wrap{padding:12px 10px 30px;max-width:1300px;margin:auto}
+.card{
+  background:linear-gradient(180deg,#0a151e,#071019);
+  border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-bottom:16px;
+}
+.card-title{padding:16px 20px;border-bottom:1px solid var(--line);
+font-size:20px;color:#9fb9cd;letter-spacing:.5px}
+.map-head{padding:16px 20px;position:absolute;z-index:800;left:18px;top:18px;
+background:rgba(6,15,23,.88);border:1px solid #31546b;border-radius:10px;
+pointer-events:none}
+.map-head b{color:var(--cyan);font-size:17px}
+.map-head div{margin-top:4px;color:#b8c9d7;font-size:13px}
+#map{height:610px;width:100%;background:#02070b;position:relative}
+.cesium-viewer .cesium-widget-credits{font-size:11px}
+.cesium-viewer-toolbar{top:12px!important;right:12px!important}
+.cesium-button{background:#0a1c2b!important;border:1px solid #21435b!important;color:#bcecff!important}
+.cesium-viewer-bottom{left:8px!important;bottom:6px!important}
+.map-mode{
+ position:absolute;z-index:1000;left:12px;bottom:12px;
+ display:flex;gap:7px;flex-wrap:wrap
+}
+.map-mode button{
+ min-height:44px;padding:9px 12px;border-radius:8px;
+ border:1px solid #31546b;background:rgba(6,14,21,.94);
+ color:#cbe8f7;cursor:pointer
+}
+.map-mode button.active{border-color:#44d7ff;color:#44d7ff}
+.leaflet-control-layers{
+  background:rgba(6,14,21,.94)!important;color:#d9e8f3!important;
+  border:1px solid #31546b!important
+}
+.leaflet-control-layers label{color:#d9e8f3}
+.leaflet-control-zoom a{
+  background:#0a1c2b!important;color:#bcecff!important;
+  border-color:#1c4058!important
+}
+.status{
+ position:absolute;z-index:800;right:12px;bottom:12px;
+ background:rgba(5,12,18,.9);border:1px solid #25465b;border-radius:8px;
+ padding:8px 10px;font-size:12px;color:#8fa8ba;pointer-events:none
+}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;padding:16px}
+.stat{background:#0d1d2a;border:1px solid #21435b;border-radius:10px;padding:18px}
+.stat span{display:block;color:#8199ad;font-size:14px}
+.stat strong{display:block;margin-top:8px;font-size:31px;color:var(--cyan)}
+.stat:nth-child(2) strong{color:var(--green)}
+.tools{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:16px}
+.tool{
+  border:1px solid #21435b;background:#0b1a27;color:#bcd1df;
+  padding:15px;border-radius:9px;text-align:left;cursor:pointer
+}
+.tool:hover{border-color:var(--cyan);color:#fff}
+.log{padding:0 18px 18px}
+.log div{padding:11px 0;border-bottom:1px solid #142a39;color:#8fa7ba;font-family:monospace}
+.footer{color:#536c7d;text-align:center;font-size:12px;padding:5px 0 18px}
+
+@media(max-width:760px){
+  .top{height:82px;padding:10px 16px}
+  .brand{font-size:16px}
+  .clock{font-size:15px}
+  #map{height:560px}
+  .map-head{left:12px;right:12px;top:12px}
+  .stats{grid-template-columns:1fr 1fr}
+  .tools{grid-template-columns:1fr 1fr}
+}
+@media(max-width:430px){
+  #map{height:540px}
+  .tools{grid-template-columns:1fr 1fr}
+  .stat{padding:14px}
+}
+</style>
+</head>
+
+<body>
+<header class="top">
+  <button class="menu" onclick="alert('Menu siap digunakan')">☰</button>
+  <div class="brand">◇ UAV DEFENSE / OSINT COMMAND</div>
+  <div class="clock" id="clock">--:--:--</div>
+</header>
+
+<main class="wrap">
+
+<section class="card" style="position:relative">
+  <div class="map-head">
+    <b>GLOBAL GEOINT MAP</b>
+    <div>3D GLOBE · Satellite / Street / Dark · Klik globe untuk koordinat</div>
+  </div>
+  <div id="map"></div>
+  <div class="status" id="mapStatus">MAP: INITIALIZING…</div>
+</section>
+
+<section class="card">
+  <div class="card-title">MISSION OVERVIEW</div>
+  <div class="stats">
+    <div class="stat"><span>Tracked UAV</span><strong id="uav">0</strong></div>
+    <div class="stat"><span>Verified Alerts</span><strong id="alerts">0</strong></div>
+    <div class="stat"><span>OSINT Tools</span><strong id="toolsCount">12</strong></div>
+    <div class="stat"><span>System</span><strong style="color:var(--green)">ONLINE</strong></div>
+  </div>
+</section>
+
+<section class="card">
+  <div class="card-title">OSINT QUICK TOOLS</div>
+  <div class="tools">
+    <button class="tool" onclick="logTool('IP')">◈ IP LOOKUP</button>
+    <button class="tool" onclick="logTool('DOMAIN')">◈ DOMAIN</button>
+    <button class="tool" onclick="logTool('WHOIS')">◈ WHOIS</button>
+    <button class="tool" onclick="logTool('DNS')">◈ DNS</button>
+    <button class="tool" onclick="logTool('GEO')">◈ GEOLOCATION</button>
+    <button class="tool" onclick="logTool('PORT')">◈ PORT CHECK</button>
+    <button class="tool" onclick="logTool('URL')">◈ URL ANALYSIS</button>
+    <button class="tool" onclick="logTool('OVERVIEW')">◈ OVERVIEW</button>
+  </div>
+</section>
+
+<section class="card">
+  <div class="card-title">EVENT LOG</div>
+  <div class="log" id="log">
+    <div>[SYSTEM] Map engine initialized</div>
+    <div>[SYSTEM] Public map layers ready</div>
+    <div>[22:18:22] Tool: DOMAIN</div>
+    <div>[22:18:19] Tool: OVERVIEW</div>
+    <div>[22:18:18] Tool: IP</div>
+  </div>
+</section>
+
+<div class="footer">UAV DEFENSE OSINT · PUBLIC DATA CONTEXT · SENSOR NOT CONNECTED</div>
+</main>
+
+<script src="https://cesium.com/downloads/cesiumjs/releases/1.136/Build/Cesium/Cesium.js"></script>
+
+<script>
+const statusEl=document.getElementById('mapStatus');
+function mapStatus(t){statusEl.textContent='MAP: '+t}
+
+const viewer = new Cesium.Viewer('map', {
+  animation:false,
+  timeline:false,
+  baseLayerPicker:false,
+  geocoder:false,
+  homeButton:true,
+  sceneModePicker:true,
+  navigationHelpButton:false,
+  fullscreenButton:false,
+  vrButton:false,
+  infoBox:true,
+  selectionIndicator:true,
+  terrainProvider:new Cesium.EllipsoidTerrainProvider(),
+  imageryProvider:false
+});
+
+viewer.scene.globe.enableLighting = true;
+viewer.scene.globe.depthTestAgainstTerrain = false;
+viewer.scene.skyAtmosphere.show = true;
+viewer.scene.fog.enabled = true;
+viewer.scene.fog.density = 0.00015;
+
+// Street imagery: OpenStreetMap tiles
+const streetProvider = new Cesium.UrlTemplateImageryProvider({
+  url:'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+  subdomains:['a','b','c'],
+  maximumLevel:19,
+  credit:'© OpenStreetMap contributors'
+});
+
+// Satellite imagery: Esri World Imagery
+const satelliteProvider = new Cesium.UrlTemplateImageryProvider({
+  url:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+  maximumLevel:19,
+  credit:'Tiles © Esri'
+});
+
+// Dark map
+const darkProvider = new Cesium.UrlTemplateImageryProvider({
+  url:'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+  subdomains:['a','b','c','d'],
+  maximumLevel:20,
+  credit:'© OpenStreetMap © CARTO'
+});
+
+let activeLayer;
+function setLayer(provider,name,button){
+  if(activeLayer) viewer.imageryLayers.remove(activeLayer,false);
+  activeLayer=viewer.imageryLayers.addImageryProvider(provider);
+  document.querySelectorAll('.map-mode button').forEach(b=>b.classList.remove('active'));
+  if(button) button.classList.add('active');
+  mapStatus(name+' 3D ONLINE');
+}
+setLayer(satelliteProvider,'SATELLITE',null);
+
+// Surabaya reference marker
+const surabaya = Cesium.Cartesian3.fromDegrees(112.7521,-7.2575,250);
+
+viewer.entities.add({
+  id:'surabaya-reference',
+  position:surabaya,
+  point:{
+    pixelSize:14,
+    color:Cesium.Color.CYAN,
+    outlineColor:Cesium.Color.WHITE,
+    outlineWidth:3,
+    heightReference:Cesium.HeightReference.NONE
+  },
+  label:{
+    text:'SURABAYA\\n-7.25750, 112.75210',
+    font:'bold 13px Arial',
+    fillColor:Cesium.Color.WHITE,
+    outlineColor:Cesium.Color.BLACK,
+    outlineWidth:3,
+    style:Cesium.LabelStyle.FILL_AND_OUTLINE,
+    verticalOrigin:Cesium.VerticalOrigin.BOTTOM,
+    pixelOffset:new Cesium.Cartesian2(0,-18),
+    showBackground:true,
+    backgroundColor:Cesium.Color.fromCssColorString('#07131d').withAlpha(.92),
+    backgroundPadding:new Cesium.Cartesian2(8,6)
+  },
+  description:'Surabaya reference<br>-7.25750, 112.75210'
+});
+
+viewer.camera.flyTo({
+  destination:Cesium.Cartesian3.fromDegrees(112.7521,-7.2575,180000),
+  orientation:{
+    heading:0,
+    pitch:Cesium.Math.toRadians(-48),
+    roll:0
+  },
+  duration:1.2,
+  complete:()=>mapStatus('SATELLITE 3D ONLINE')
+});
+
+// Click globe: show latitude/longitude.
+const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+handler.setInputAction(function(click){
+  const ray=viewer.camera.getPickRay(click.position);
+  const cartesian=viewer.scene.globe.pick(ray,viewer.scene);
+  if(!cartesian) return;
+  const carto=Cesium.Cartographic.fromCartesian(cartesian);
+  const lat=Cesium.Math.toDegrees(carto.latitude).toFixed(5);
+  const lon=Cesium.Math.toDegrees(carto.longitude).toFixed(5);
+
+  viewer.entities.removeById('clicked-coordinate');
+  viewer.entities.add({
+    id:'clicked-coordinate',
+    position:Cesium.Cartesian3.fromRadians(carto.longitude,carto.latitude,1000),
+    point:{
+      pixelSize:10,
+      color:Cesium.Color.YELLOW,
+      outlineColor:Cesium.Color.WHITE,
+      outlineWidth:2
+    },
+    label:{
+      text:'COORDINATE\\n'+lat+', '+lon,
+      font:'bold 12px Arial',
+      fillColor:Cesium.Color.WHITE,
+      outlineColor:Cesium.Color.BLACK,
+      outlineWidth:3,
+      style:Cesium.LabelStyle.FILL_AND_OUTLINE,
+      verticalOrigin:Cesium.VerticalOrigin.BOTTOM,
+      pixelOffset:new Cesium.Cartesian2(0,-12),
+      showBackground:true,
+      backgroundColor:Cesium.Color.fromCssColorString('#07131d').withAlpha(.94),
+      backgroundPadding:new Cesium.Cartesian2(7,5)
+    }
+  });
+  addLog('MAP '+lat+', '+lon);
+},Cesium.ScreenSpaceEventType.LEFT_CLICK);
+
+function addLog(t){
+  const el=document.getElementById('log');
+  const d=new Date();
+  const tm=d.toLocaleTimeString('id-ID',{hour12:false});
+  const row=document.createElement('div');
+  row.textContent='['+tm+'] '+t;
+  el.prepend(row);
+}
+function logTool(t){addLog('Tool: '+t)}
+
+function tick(){
+  document.getElementById('clock').textContent=
+    new Date().toLocaleTimeString('id-ID',{hour12:false});
+}
+tick(); setInterval(tick,1000);
+
+// Add map mode buttons.
+const mapBox=document.getElementById('map');
+const mode=document.createElement('div');
+mode.className='map-mode';
+mode.innerHTML=
+  '<button type="button" data-mode="sat">🛰️ Satellite</button>'+
+  '<button type="button" data-mode="street">🗺️ Street</button>'+
+  '<button type="button" data-mode="dark">🌑 Dark</button>';
+mapBox.appendChild(mode);
+
+const buttons=mode.querySelectorAll('button');
+buttons[0].classList.add('active');
+buttons[0].addEventListener('click',()=>setLayer(satelliteProvider,'SATELLITE',buttons[0]));
+buttons[1].addEventListener('click',()=>setLayer(streetProvider,'STREET',buttons[1]));
+buttons[2].addEventListener('click',()=>setLayer(darkProvider,'DARK',buttons[2]));
+</script>
+
+<script>
+const statusEl=document.getElementById('mapStatus');
+function mapStatus(t){statusEl.textContent='MAP: '+t}
+
+const map=L.map('map',{
+  center:[-7.2575,112.7521],
+  zoom:10,
+  zoomControl:true,
+  preferCanvas:true
+});
+
+const street=L.tileLayer(
+  'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+  {
+    maxZoom:19,
+    subdomains:['a','b','c'],
+    attribution:'&copy; OpenStreetMap contributors'
+  }
+);
+
+const dark=L.tileLayer(
+  'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+  {
+    maxZoom:20,
+    subdomains:'abcd',
+    attribution:'&copy; OpenStreetMap &copy; CARTO'
+  }
+);
+
+const satellite=L.tileLayer(
+  'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+  {
+    maxZoom:19,
+    attribution:'Tiles &copy; Esri'
+  }
+);
+
+street.on('load',()=>mapStatus('STREET ONLINE'));
+satellite.on('load',()=>mapStatus('SATELLITE ONLINE'));
+dark.on('load',()=>mapStatus('DARK MAP ONLINE'));
+
+street.on('tileerror',()=>mapStatus('STREET TILE ERROR — TRY SATELLITE'));
+satellite.on('tileerror',()=>mapStatus('SATELLITE TILE ERROR — TRY STREET'));
+
+street.addTo(map);
+
+L.control.layers(
+  {'🗺️ Street':street,'🌑 Dark':dark,'🛰️ Satellite':satellite},
+  null,
+  {collapsed:false,position:'topright'}
+).addTo(map);
+
+const surabaya=L.marker([-7.2575,112.7521]).addTo(map);
+surabaya.bindPopup(
+  '<b>Surabaya reference</b><br>-7.25750, 112.75210',
+  {closeButton:true}
+).openPopup();
+
+map.on('click',e=>{
+  const lat=e.latlng.lat.toFixed(5);
+  const lon=e.latlng.lng.toFixed(5);
+  L.popup().setLatLng(e.latlng)
+   .setContent('<b>Map coordinate</b><br>'+lat+', '+lon)
+   .openOn(map);
+  addLog('MAP '+lat+', '+lon);
+});
+
+function addLog(t){
+  const el=document.getElementById('log');
+  const d=new Date();
+  const tm=d.toLocaleTimeString('id-ID',{hour12:false});
+  const row=document.createElement('div');
+  row.textContent='['+tm+'] '+t;
+  el.prepend(row);
+}
+function logTool(t){addLog('Tool: '+t)}
+
+function tick(){
+  document.getElementById('clock').textContent=
+    new Date().toLocaleTimeString('id-ID',{hour12:false});
+}
+tick(); setInterval(tick,1000);
+
+window.addEventListener('load',()=>{
+  setTimeout(()=>map.invalidateSize(),300);
+  setTimeout(()=>map.invalidateSize(),1000);
+});
+</script>
+</body>
+</html>
